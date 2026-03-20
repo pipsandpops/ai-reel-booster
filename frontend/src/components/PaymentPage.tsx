@@ -111,9 +111,9 @@ export function PaymentPage({ plan, onBack }: PaymentPageProps) {
               { label: 'Amount paid', value: `₹${total}` },
               { label: 'Payment ID',  value: paymentId },
             ].map(r => (
-              <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, ':last-child': { marginBottom: 0 } }}>
+              <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontSize: 13, color: '#64748b' }}>{r.label}</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', fontFamily: r.label === 'Payment ID' ? 'monospace' : 'inherit', fontSize: r.label === 'Payment ID' ? 11 : 13 }}>{r.value}</span>
+                <span style={{ fontSize: r.label === 'Payment ID' ? 11 : 13, fontWeight: 600, color: '#0f172a', fontFamily: r.label === 'Payment ID' ? 'monospace' : 'inherit' }}>{r.value}</span>
               </div>
             ))}
           </div>

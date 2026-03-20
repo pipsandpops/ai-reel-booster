@@ -27,8 +27,6 @@ const STATUS_MSG: Record<string, string> = {
 export function ProcessingStatus({ jobStatus, progressPercent }: ProcessingStatusProps) {
   const msg = jobStatus ? (STATUS_MSG[jobStatus] ?? jobStatus) : 'Processing…';
   const currentIdx = STATUS_ORDER.indexOf(jobStatus ?? '');
-  const stepActiveIdx = STEPS.findIndex(s => s.key === jobStatus);
-
   return (
     <div className="card" style={{ padding: '28px 28px 24px', borderRadius: 20 }}>
 
