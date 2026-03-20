@@ -16,7 +16,5 @@ RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Railway injects PORT env var
-ENV ASPNETCORE_URLS=http://+:${PORT:-8080}
-
-ENTRYPOINT ["dotnet", "AIReelBooster.API.dll"]
+# Use shell form so $PORT is expanded at container runtime (Railway injects it)
+ENTRYPOINT ["/bin/sh", "-c", "exec dotnet AIReelBooster.API.dll --urls \"http://+:${PORT:-8080}\""]
