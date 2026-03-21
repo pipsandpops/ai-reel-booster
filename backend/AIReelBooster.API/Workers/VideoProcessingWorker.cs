@@ -93,6 +93,7 @@ public class VideoProcessingWorker : BackgroundService
             var transcript = string.Join(" ", subtitles.Select(s => s.Text));
             if (string.IsNullOrWhiteSpace(transcript))
                 transcript = "[No speech detected in video]";
+            job.Transcript = transcript;
 
             var (hook, caption, hashtags) = await aiGeneration.GenerateAsync(transcript, ct);
 

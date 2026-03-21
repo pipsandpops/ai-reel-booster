@@ -55,3 +55,7 @@ public record BurnSubtitlesResponse(
     string JobId,
     string BurnedVideoUrl
 );
+
+public record ImproveReelRequest(string ImprovedHook);
+
+public record ImproveReelResponse(ViralScoreDto ViralScore);

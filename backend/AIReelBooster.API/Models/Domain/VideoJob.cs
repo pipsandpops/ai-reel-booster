@@ -35,4 +35,5 @@ public class VideoJob
 
     // AI Results
     public AnalysisResult? AnalysisResult { get; set; }
+    public string? Transcript { get; set; }
 }

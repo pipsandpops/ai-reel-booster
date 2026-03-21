@@ -13,6 +13,7 @@ public class AnalysisController : ControllerBase
     private readonly JobStore _jobStore;
     private readonly IVideoStorageService _storage;
     private readonly IVideoProcessingService _videoProcessing;
+    private readonly IAIGenerationService _aiGeneration;
     private readonly BackgroundProcessingQueue _queue;
     private readonly ILogger<AnalysisController> _logger;
 
@@ -20,12 +21,14 @@ public class AnalysisController : ControllerBase
         JobStore jobStore,
         IVideoStorageService storage,
         IVideoProcessingService videoProcessing,
+        IAIGenerationService aiGeneration,
         BackgroundProcessingQueue queue,
         ILogger<AnalysisController> logger)
     {
         _jobStore = jobStore;
         _storage = storage;
         _videoProcessing = videoProcessing;
+        _aiGeneration = aiGeneration;
         _queue = queue;
         _logger = logger;
     }
@@ -128,6 +131,43 @@ public class AnalysisController : ControllerBase
 
         var stream = _storage.OpenFileStream(job.BurnedVideoFilePath);
         return File(stream, "video/mp4", enableRangeProcessing: true);
+    }
+
+    [HttpPost("{jobId}/improve")]
+    public async Task<IActionResult> ImproveReel(
+        string jobId,
+        [FromBody] ImproveReelRequest request,
+        CancellationToken ct)
+    {
+        var job = _jobStore.Get(jobId);
+        if (job == null) return NotFound(new { error = "Job not found." });
+        if (job.Status != JobStatus.Complete) return Conflict(new { error = "Job not complete yet." });
+        if (job.AnalysisResult == null) return BadRequest(new { error = "No analysis result available." });
+
+        var transcript = job.Transcript ?? "[No speech detected in video]";
+        var caption    = job.AnalysisResult.Caption;
+
+        try
+        {
+            var viralScore = await _aiGeneration.AnalyzeViralScoreAsync(
+                request.ImprovedHook, caption, transcript, ct);
+
+            return Ok(new ImproveReelResponse(new ViralScoreDto(
+                viralScore.HookScore,
+                viralScore.EmotionScore,
+                viralScore.ClarityScore,
+                viralScore.TrendScore,
+                viralScore.EngagementScore,
+                viralScore.ViralScore,
+                viralScore.Problem,
+                viralScore.ImprovedHook
+            )));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Improve reel failed for job {JobId}", jobId);
+            return StatusCode(500, new { error = "Failed to analyze reel." });
+        }
     }
 
     private static string FormatTime(TimeSpan ts) =>

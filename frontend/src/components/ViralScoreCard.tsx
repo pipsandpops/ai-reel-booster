@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { ViralScore } from '../types';
+import { api } from '../services/api';
 import { Zap, TrendingUp, Eye, Smile, MessageCircle, Lightbulb, RefreshCw } from 'lucide-react';
 
 interface ViralScoreCardProps {
   viralScore: ViralScore;
+  jobId: string;
 }
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -26,46 +28,7 @@ function easeOut(t: number): number {
   return 1 - Math.pow(1 - t, 3);
 }
 
-function clamp(v: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, v));
-}
 
-// Simulates an AI improvement iteration — bumps each factor slightly
-function simulateImprovement(current: ViralScore): ViralScore {
-  const bump = () => Math.floor(Math.random() * 7) + 3; // 3–9 pts
-  const hs = clamp(current.hookScore     + bump(), 0, 96);
-  const es = clamp(current.emotionScore  + bump(), 0, 96);
-  const cs = clamp(current.clarityScore  + bump(), 0, 96);
-  const ts = clamp(current.trendScore    + bump(), 0, 96);
-  const gs = clamp(current.engagementScore + bump(), 0, 96);
-  const vs = Math.round(hs * 0.30 + es * 0.20 + cs * 0.15 + ts * 0.15 + gs * 0.20);
-
-  const problems = [
-    'Hook lacks emotional urgency — add a pain point.',
-    'Caption feels generic — make it more personal.',
-    'Opening 2 seconds could grab harder.',
-    'Missing a clear call-to-action at the end.',
-    'Trend alignment could be stronger — use a current audio.',
-  ];
-  const hooks = [
-    `"${current.improvedHook} — and nobody talks about this"`,
-    `"${current.improvedHook.replace(/"/g, '')} (most people get this wrong)"`,
-    `"This changed everything: ${current.improvedHook.replace(/"/g, '')}"`,
-    `"Stop scrolling — ${current.improvedHook.replace(/"/g, '')}"`,
-    `"What I wish I knew: ${current.improvedHook.replace(/"/g, '')}"`,
-  ];
-
-  return {
-    hookScore: hs,
-    emotionScore: es,
-    clarityScore: cs,
-    trendScore: ts,
-    engagementScore: gs,
-    viralScore: vs,
-    problem: problems[Math.floor(Math.random() * problems.length)],
-    improvedHook: hooks[Math.floor(Math.random() * hooks.length)],
-  };
-}
 
 // ─── sub-components ──────────────────────────────────────────────────────────
 
@@ -94,7 +57,7 @@ function AnimatedBar({ score, color, active }: AnimatedBarProps) {
 
 // ─── main component ──────────────────────────────────────────────────────────
 
-export function ViralScoreCard({ viralScore }: ViralScoreCardProps) {
+export function ViralScoreCard({ viralScore, jobId }: ViralScoreCardProps) {
   const [displayed, setDisplayed]       = useState<ViralScore>(viralScore);
   const [animatedScore, setAnimatedScore] = useState(0);
   const [barsActive, setBarsActive]     = useState(false);
@@ -148,17 +111,20 @@ export function ViralScoreCard({ viralScore }: ViralScoreCardProps) {
     return cleanup;
   }, [displayed, runAnimation]);
 
-  // "Improve My Reel" handler
-  const handleImprove = () => {
+  // "Improve My Reel" handler — calls real Claude API
+  const handleImprove = async () => {
     setImproving(true);
     setFading(true);
 
-    setTimeout(() => {
-      const next = simulateImprovement(displayed);
-      setDisplayed(next);
+    try {
+      const result = await api.improveReel(jobId, displayed.improvedHook);
+      setDisplayed(result.viralScore);
+    } catch {
+      // on error keep current results visible
+    } finally {
       setFading(false);
       setImproving(false);
-    }, 1500);
+    }
   };
 
   const liveColor  = getScoreColor(animatedScore);

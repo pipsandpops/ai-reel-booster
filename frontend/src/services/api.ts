@@ -3,6 +3,7 @@ import type {
   BurnSubtitlesResponse,
   JobStatusResponse,
   UploadVideoResponse,
+  ViralScore,
 } from '../types';
 
 // In dev the Vite proxy rewrites /api → localhost:5000.
@@ -53,5 +54,13 @@ export const api = {
 
   deleteJob(jobId: string): Promise<void> {
     return fetch(`${BASE}/video/${jobId}`, { method: 'DELETE' }).then(() => undefined);
+  },
+
+  improveReel(jobId: string, improvedHook: string): Promise<{ viralScore: ViralScore }> {
+    return request<{ viralScore: ViralScore }>(`/analysis/${jobId}/improve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ improvedHook }),
+    });
   },
 };
