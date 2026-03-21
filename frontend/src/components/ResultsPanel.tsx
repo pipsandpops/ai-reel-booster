@@ -40,7 +40,7 @@ export function ResultsPanel({ result, jobId }: ResultsPanelProps) {
       </div>
 
       {/* Two-column layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 400px) 1fr', gap: 20, alignItems: 'start' }}>
+      <div className="r-results-grid">
 
         {/* Left: Video */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

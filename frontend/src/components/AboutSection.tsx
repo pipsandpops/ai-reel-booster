@@ -27,10 +27,7 @@ export function AboutSection() {
         </div>
 
         {/* Story */}
-        <div style={{
-          display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32,
-          marginBottom: 56, alignItems: 'center',
-        }}>
+        <div className="r-grid-2" style={{ marginBottom: 56, alignItems: 'center' }}>
           <div>
             <h3 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: '0 0 14px', letterSpacing: -0.4 }}>
               Our story

@@ -69,10 +69,10 @@ export function DemoSection() {
         </div>
 
         {/* Demo card */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'start' }}>
+        <div className="r-grid-2" style={{ alignItems: 'start' }}>
 
           {/* Left: mock phone / video thumbnail */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="r-demo-phone" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Phone mockup */}
             <div style={{
               background: '#0f172a', borderRadius: 24, overflow: 'hidden',

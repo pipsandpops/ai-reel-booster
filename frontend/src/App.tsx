@@ -75,7 +75,7 @@ function App() {
           </button>
 
           {/* Desktop nav links */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} className="nav-links">
+          <div className="nav-links">
             {[
               { label: 'Features', id: 'demo' },
               { label: 'Pricing', id: 'pricing' },
@@ -105,7 +105,7 @@ function App() {
             )}
             <button
               onClick={() => scrollTo('pricing')}
-              className="btn-primary"
+              className="btn-primary nav-cta-desktop"
               style={{ padding: '8px 18px', fontSize: 13 }}
             >
               Get Started
@@ -113,9 +113,8 @@ function App() {
             {/* Mobile menu toggle */}
             <button
               onClick={() => setMobileMenuOpen(o => !o)}
-              className="btn-secondary"
-              style={{ padding: '7px 9px', display: 'none' }}
-              id="mobile-menu-btn"
+              className="btn-secondary mobile-menu-btn"
+              style={{ padding: '7px 9px' }}
             >
               {mobileMenuOpen ? <X size={16} /> : <Menu size={16} />}
             </button>

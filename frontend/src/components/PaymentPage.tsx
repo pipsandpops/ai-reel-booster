@@ -146,7 +146,7 @@ export function PaymentPage({ plan, onBack }: PaymentPageProps) {
         </div>
       </div>
 
-      <div style={{ maxWidth: 820, margin: '0 auto', padding: '36px 24px', display: 'grid', gridTemplateColumns: '1fr 340px', gap: 28, alignItems: 'start' }}>
+      <div className="r-payment-grid" style={{ maxWidth: 820, margin: '0 auto', padding: '36px 24px' }}>
 
         {/* Left: contact + pay */}
         <div className="card" style={{ borderRadius: 20, padding: 28 }}>

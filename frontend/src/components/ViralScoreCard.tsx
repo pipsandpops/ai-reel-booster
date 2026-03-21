@@ -178,10 +178,10 @@ export function ViralScoreCard({ viralScore, jobId }: ViralScoreCardProps) {
       }}>
 
         {/* Gauge + factors */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 20 }}>
+        <div className="r-viral-inner">
 
           {/* SVG gauge */}
-          <div style={{ position: 'relative', width: 130, height: 130, flexShrink: 0 }}>
+          <div className="r-viral-gauge" style={{ position: 'relative', width: 130, height: 130, flexShrink: 0 }}>
             <svg width="130" height="130" viewBox="0 0 130 130">
               {/* Track */}
               <circle cx="65" cy="65" r={radius}
