@@ -21,6 +21,7 @@ function App() {
   const [page, setPage] = useState<Page>('home');
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isPaidUser, setIsPaidUser] = useState(false);
 
   const scrollTo = (id: string) => {
     setMobileMenuOpen(false);
@@ -46,7 +47,13 @@ function App() {
 
   // ── Payment page ──────────────────────────────────────────────────
   if (page === 'payment' && selectedPlan) {
-    return <PaymentPage plan={selectedPlan} onBack={handlePaymentBack} />;
+    return (
+      <PaymentPage
+        plan={selectedPlan}
+        onBack={handlePaymentBack}
+        onSuccess={() => { setIsPaidUser(true); setPage('home'); window.scrollTo(0, 0); }}
+      />
+    );
   }
 
   // ── Main page ─────────────────────────────────────────────────────
@@ -247,7 +254,12 @@ function App() {
         {state === 'complete' && result && jobId && (
           <section style={{ padding: '32px 24px 64px' }}>
             <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-              <ResultsPanel result={result} jobId={jobId} />
+              <ResultsPanel
+              result={result}
+              jobId={jobId}
+              isPaidUser={isPaidUser}
+              onUpgrade={() => { setPage('payment'); setSelectedPlan(null); setTimeout(() => scrollTo('pricing'), 100); }}
+            />
             </div>
           </section>
         )}

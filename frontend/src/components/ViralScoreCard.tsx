@@ -6,6 +6,8 @@ import { Zap, TrendingUp, Eye, Smile, MessageCircle, Lightbulb, RefreshCw, Alert
 interface ViralScoreCardProps {
   viralScore: ViralScore;
   jobId: string;
+  isPaidUser?: boolean;
+  onUpgrade?: () => void;
 }
 
 // ─── Score helpers ────────────────────────────────────────────────────────────
@@ -80,13 +82,14 @@ function AnimatedBar({ score, color, active }: AnimatedBarProps) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function ViralScoreCard({ viralScore, jobId }: ViralScoreCardProps) {
+export function ViralScoreCard({ viralScore, jobId, isPaidUser = false, onUpgrade }: ViralScoreCardProps) {
   const [displayed, setDisplayed]           = useState<ViralScore>(viralScore);
   const [animatedScore, setAnimatedScore]   = useState(0);
   const [barsActive, setBarsActive]         = useState(false);
   const [visible, setVisible]               = useState(false);
   const [fading, setFading]                 = useState(false);
   const [improving, setImproving]           = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // View prediction state
   const [viewRange, setViewRange]           = useState<ViewRange | null>(null);
@@ -322,15 +325,17 @@ export function ViralScoreCard({ viralScore, jobId }: ViralScoreCardProps) {
         {viewRange && (
           <div style={{
             background: 'rgba(6,182,212,0.07)',
-            border: '1px solid rgba(6,182,212,0.22)',
+            border: `1px solid ${isPaidUser ? 'rgba(6,182,212,0.22)' : 'rgba(255,255,255,0.1)'}`,
             borderRadius: 14,
             padding: '14px 16px',
             marginBottom: 10,
             opacity: viewVisible ? 1 : 0,
             transform: viewVisible ? 'translateY(0)' : 'translateY(8px)',
             transition: 'opacity 0.5s ease, transform 0.5s ease',
+            position: 'relative',
+            overflow: 'hidden',
           }}>
-            {/* Section label */}
+            {/* Section label — always visible */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
               <Eye size={14} color="#22d3ee" />
               <span style={{ fontSize: 11, fontWeight: 700, color: '#67e8f9', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
@@ -338,42 +343,72 @@ export function ViralScoreCard({ viralScore, jobId }: ViralScoreCardProps) {
               </span>
             </div>
 
-            {/* Views range + confidence */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-              <span style={{
-                fontSize: 26, fontWeight: 900, color: '#e0f2fe',
-                letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums', lineHeight: 1,
-              }}>
-                {formatViews(animViewMin)} – {formatViews(animViewMax)}
-              </span>
-              <span style={{
-                fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 20,
-                background: confidence.bg, border: `1px solid ${confidence.border}`,
-                color: confidence.color, flexShrink: 0,
-              }}>
-                {confidence.label}
-              </span>
+            {/* Blurred content wrapper */}
+            <div style={{
+              filter: isPaidUser ? 'none' : 'blur(6px)',
+              userSelect: isPaidUser ? 'auto' : 'none',
+              pointerEvents: isPaidUser ? 'auto' : 'none',
+              transition: 'filter 0.4s ease',
+            }}>
+              {/* Views range + confidence */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                <span style={{
+                  fontSize: 26, fontWeight: 900, color: '#e0f2fe',
+                  letterSpacing: -0.5, fontVariantNumeric: 'tabular-nums', lineHeight: 1,
+                }}>
+                  {formatViews(animViewMin)} – {formatViews(animViewMax)}
+                </span>
+                <span style={{
+                  fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 20,
+                  background: confidence.bg, border: `1px solid ${confidence.border}`,
+                  color: confidence.color, flexShrink: 0,
+                }}>
+                  {confidence.label}
+                </span>
+              </div>
+
+              {/* Mini progress bar */}
+              <div style={{ height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden', marginBottom: 10 }}>
+                <div style={{
+                  height: '100%', borderRadius: 4,
+                  width: barsActive ? `${displayed.viralScore}%` : '0%',
+                  background: 'linear-gradient(90deg, #06b6d4, #0ea5e9, #38bdf8)',
+                  transition: 'width 1.2s cubic-bezier(0.34,1.2,0.64,1)',
+                  boxShadow: '0 0 8px rgba(6,182,212,0.5)',
+                }} />
+              </div>
+
+              {/* Why not higher */}
+              {displayed.problem && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
+                  <AlertTriangle size={13} color="#fbbf24" style={{ flexShrink: 0, marginTop: 1 }} />
+                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.5 }}>
+                    <span style={{ color: '#fcd34d', fontWeight: 600 }}>Why not higher: </span>
+                    {displayed.problem}
+                  </p>
+                </div>
+              )}
             </div>
 
-            {/* Mini progress bar: view potential meter */}
-            <div style={{ height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden', marginBottom: 10 }}>
+            {/* Lock overlay — shown for free users */}
+            {!isPaidUser && (
               <div style={{
-                height: '100%', borderRadius: 4,
-                width: barsActive ? `${displayed.viralScore}%` : '0%',
-                background: 'linear-gradient(90deg, #06b6d4, #0ea5e9, #38bdf8)',
-                transition: 'width 1.2s cubic-bezier(0.34,1.2,0.64,1)',
-                boxShadow: '0 0 8px rgba(6,182,212,0.5)',
-              }} />
-            </div>
-
-            {/* Why not higher */}
-            {displayed.problem && (
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 7 }}>
-                <AlertTriangle size={13} color="#fbbf24" style={{ flexShrink: 0, marginTop: 1 }} />
-                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.5 }}>
-                  <span style={{ color: '#fcd34d', fontWeight: 600 }}>Why not higher: </span>
-                  {displayed.problem}
-                </p>
+                position: 'absolute', inset: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'rgba(15,10,40,0.45)',
+                backdropFilter: 'blur(2px)',
+                borderRadius: 14,
+                cursor: 'pointer',
+              }} onClick={() => setShowUpgradeModal(true)}>
+                <span style={{
+                  fontSize: 12, fontWeight: 700, color: '#e0f2fe',
+                  background: 'rgba(6,182,212,0.2)',
+                  border: '1px solid rgba(6,182,212,0.35)',
+                  padding: '6px 14px', borderRadius: 20,
+                  backdropFilter: 'blur(4px)',
+                }}>
+                  🔒 Unlock to see full prediction
+                </span>
               </div>
             )}
           </div>
@@ -416,43 +451,97 @@ export function ViralScoreCard({ viralScore, jobId }: ViralScoreCardProps) {
 
       </div>{/* end fading wrapper */}
 
-      {/* "Increase My Views" button */}
+      {/* "Increase My Views" / locked button */}
       <button
-        onClick={handleImprove}
+        onClick={isPaidUser ? handleImprove : () => setShowUpgradeModal(true)}
         disabled={improving}
         style={{
           width: '100%',
           padding: '12px 0',
           borderRadius: 12,
-          border: 'none',
+          border: isPaidUser ? 'none' : '1px solid rgba(255,255,255,0.15)',
           cursor: improving ? 'not-allowed' : 'pointer',
-          background: improving
+          background: !isPaidUser
+            ? 'rgba(255,255,255,0.06)'
+            : improving
             ? 'rgba(139,92,246,0.2)'
             : 'linear-gradient(135deg, #0891b2, #0e7490, #7c3aed)',
-          color: improving ? 'rgba(196,181,253,0.6)' : '#fff',
+          color: !isPaidUser ? 'rgba(255,255,255,0.45)' : improving ? 'rgba(196,181,253,0.6)' : '#fff',
           fontSize: 14,
           fontWeight: 700,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: 8,
-          transition: 'opacity 0.2s ease, transform 0.15s ease, background 0.3s ease',
+          transition: 'all 0.3s ease',
           opacity: improving ? 0.7 : 1,
-          transform: improving ? 'scale(0.98)' : 'scale(1)',
-          boxShadow: improving ? 'none' : '0 4px 20px rgba(6,182,212,0.3)',
+          boxShadow: isPaidUser && !improving ? '0 4px 20px rgba(6,182,212,0.3)' : 'none',
           letterSpacing: 0.2,
         }}
-        onMouseEnter={e => { if (!improving) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.02)'; }}
+        onMouseEnter={e => { if (isPaidUser && !improving) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.02)'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
       >
-        <RefreshCw
-          size={15}
-          style={{ animation: improving ? 'spin 0.9s linear infinite' : 'none' }}
-        />
-        {improving ? 'Improving your reel…' : '🚀 Increase My Views'}
+        <RefreshCw size={15} style={{ animation: improving ? 'spin 0.9s linear infinite' : 'none' }} />
+        {!isPaidUser
+          ? '🔒 Unlock to Increase Views'
+          : improving
+          ? 'Improving your reel…'
+          : '🚀 Increase My Views'}
       </button>
 
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      {/* Upgrade modal */}
+      {showUpgradeModal && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(0,0,0,0.6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 24,
+            backdropFilter: 'blur(4px)',
+          }}
+          onClick={() => setShowUpgradeModal(false)}
+        >
+          <div
+            style={{
+              background: 'white', borderRadius: 24, padding: '36px 28px',
+              maxWidth: 380, width: '100%', textAlign: 'center',
+              boxShadow: '0 24px 64px rgba(0,0,0,0.25)',
+              animation: 'modalPop 0.25s cubic-bezier(0.34,1.4,0.64,1)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 44, marginBottom: 16, lineHeight: 1 }}>🔥</div>
+            <h3 style={{ fontSize: 20, fontWeight: 800, color: '#0f172a', margin: '0 0 10px', letterSpacing: -0.4 }}>
+              Your reel can reach more views 🚀
+            </h3>
+            <p style={{ color: '#64748b', fontSize: 14, margin: '0 0 24px', lineHeight: 1.6 }}>
+              Unlock the full prediction and improvement loop to maximise your reach and go viral.
+            </p>
+            <button
+              onClick={() => { setShowUpgradeModal(false); onUpgrade?.(); }}
+              className="btn-primary"
+              style={{ width: '100%', padding: '13px', fontSize: 15, borderRadius: 12 }}
+            >
+              🚀 Unlock Now
+            </button>
+            <button
+              onClick={() => setShowUpgradeModal(false)}
+              style={{
+                marginTop: 12, background: 'none', border: 'none',
+                cursor: 'pointer', fontSize: 13, color: '#94a3b8',
+                padding: '4px 8px',
+              }}
+            >
+              Maybe later
+            </button>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes modalPop { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+      `}</style>
     </div>
   );
 }

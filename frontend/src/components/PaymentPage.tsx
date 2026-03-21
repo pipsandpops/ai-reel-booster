@@ -16,13 +16,14 @@ declare global {
 interface PaymentPageProps {
   plan: Plan;
   onBack: () => void;
+  onSuccess?: () => void;
 }
 
 type PayState = 'idle' | 'processing' | 'success' | 'error';
 
 const GST_RATE = 0.18;
 
-export function PaymentPage({ plan, onBack }: PaymentPageProps) {
+export function PaymentPage({ plan, onBack, onSuccess }: PaymentPageProps) {
   const [payState, setPayState]   = useState<PayState>('idle');
   const [paymentId, setPaymentId] = useState('');
   const [errMsg, setErrMsg]       = useState('');
@@ -64,6 +65,7 @@ export function PaymentPage({ plan, onBack }: PaymentPageProps) {
       handler: (response: { razorpay_payment_id: string }) => {
         setPaymentId(response.razorpay_payment_id);
         setPayState('success');
+        onSuccess?.();
       },
       modal: {
         ondismiss: () => setPayState('idle'),
