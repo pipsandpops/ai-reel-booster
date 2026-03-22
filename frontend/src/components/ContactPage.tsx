@@ -234,8 +234,8 @@ export function ContactPage({ onBack }: ContactPageProps) {
                   {
                     icon: <Mail size={16} color="#4f46e5" />,
                     label: 'Email',
-                    value: 'support@boostmyreel.com',
-                    href: 'mailto:support@boostmyreel.com',
+                    value: 'boostmyreel@gmail.com',
+                    href: 'mailto:boostmyreel@gmail.com',
                   },
                   {
                     icon: <Clock size={16} color="#7c3aed" />,
