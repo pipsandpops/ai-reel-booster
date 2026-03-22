@@ -3,9 +3,11 @@ import type {
   BurnSubtitlesResponse,
   ImageAnalysisResult,
   ImageJobStatus,
+  InstagramStatus,
   JobStatusResponse,
   UploadVideoResponse,
   ViralScore,
+  ViewPrediction,
 } from '../types';
 
 // In dev the Vite proxy rewrites /api → localhost:5000.
@@ -95,6 +97,36 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId, paymentId, orderId, signature, plan }),
     });
+  },
+
+  // ── Instagram Integration ────────────────────────────────────────────────────
+
+  getInstagramAuthUrl(userId: string): Promise<{ authUrl: string }> {
+    return request<{ authUrl: string }>(`/instagram/auth-url?userId=${encodeURIComponent(userId)}`);
+  },
+
+  getInstagramStatus(userId: string): Promise<InstagramStatus> {
+    return request<InstagramStatus>(`/instagram/status?userId=${encodeURIComponent(userId)}`);
+  },
+
+  getPersonalizedPrediction(
+    userId: string,
+    viralScore: number,
+    engagementScore: number,
+    hookScore: number,
+  ): Promise<ViewPrediction> {
+    return request<ViewPrediction>('/instagram/prediction', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, viralScore, engagementScore, hookScore }),
+    });
+  },
+
+  disconnectInstagram(userId: string): Promise<{ success: boolean }> {
+    return request<{ success: boolean }>(
+      `/instagram/disconnect?userId=${encodeURIComponent(userId)}`,
+      { method: 'DELETE' },
+    );
   },
 
   // ── Image Growth Engine ──────────────────────────────────────────────────────

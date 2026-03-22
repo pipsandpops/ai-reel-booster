@@ -57,6 +57,14 @@ builder.Services.AddHttpClient<IAIGenerationService, ClaudeAIGenerationService>(
 builder.Services.AddHostedService<VideoProcessingWorker>();
 builder.Services.AddHostedService<JobCleanupWorker>();
 
+// ── View Prediction ───────────────────────────────────────────────────────────
+builder.Services.AddScoped<IScenarioPredictionService, ScenarioPredictionService>();
+
+// ── Instagram Integration ─────────────────────────────────────────────────────
+builder.Services.AddScoped<IInstagramAuthService,          InstagramAuthService>();
+builder.Services.AddScoped<IPersonalizedPredictionService, PersonalizedPredictionService>();
+builder.Services.AddHttpClient<IInstagramAnalyticsService, InstagramAnalyticsService>();
+
 // ── ImageGrowthEngine ─────────────────────────────────────────────────────────
 builder.Services.AddSingleton<ImageJobStore>();
 builder.Services.AddSingleton<ImageProcessingQueue>();

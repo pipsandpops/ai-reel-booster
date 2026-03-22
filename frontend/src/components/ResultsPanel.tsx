@@ -10,11 +10,12 @@ import { Sparkles, VolumeX } from 'lucide-react';
 interface ResultsPanelProps {
   result: AnalysisResult;
   jobId: string;
+  userId: string;
   isPaidUser?: boolean;
   onUpgrade?: () => void;
 }
 
-export function ResultsPanel({ result, jobId, isPaidUser = false, onUpgrade }: ResultsPanelProps) {
+export function ResultsPanel({ result, jobId, userId, isPaidUser = false, onUpgrade }: ResultsPanelProps) {
   return (
     <div>
       {/* Success banner */}
@@ -76,7 +77,16 @@ export function ResultsPanel({ result, jobId, isPaidUser = false, onUpgrade }: R
 
         {/* Right: AI results */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {result.viralScore && <ViralScoreCard viralScore={result.viralScore} jobId={jobId} isPaidUser={isPaidUser} onUpgrade={onUpgrade} />}
+          {result.viralScore && (
+            <ViralScoreCard
+              viralScore={result.viralScore}
+              jobId={jobId}
+              userId={userId}
+              isPaidUser={isPaidUser}
+              onUpgrade={onUpgrade}
+              viewPrediction={result.viewPrediction}
+            />
+          )}
           <HookCard hook={result.hook} />
           <CaptionCard caption={result.caption} />
           <HashtagCard hashtags={result.hashtags} />

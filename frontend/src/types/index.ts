@@ -46,6 +46,40 @@ export interface ViralScore {
   improvedHook: string;
 }
 
+// ── View Prediction ────────────────────────────────────────────────────────────
+
+export interface ViewScenario {
+  followers: string;  // e.g. "10K"
+  views: string;      // e.g. "1.3K–5.2K"
+  tier: string;       // "Low" | "Medium" | "High"
+}
+
+export interface ViewPrediction {
+  predictionType: 'scenario' | 'personalized';
+  viralTier: 'Low' | 'Medium' | 'High';
+  scenarios: ViewScenario[];
+  note: string;
+  // Personalised fields (null in scenario mode)
+  followers?: number | null;
+  avgViews?: number | null;
+  predictedRange?: string | null;
+  confidence?: string | null;
+  basedOn?: string | null;
+}
+
+// ── Instagram ─────────────────────────────────────────────────────────────────
+
+export interface InstagramStatus {
+  connected: boolean;
+  username?: string;
+  followers?: number;
+  avgViews?: number | null;
+  engagementRate?: number;
+  connectedAt?: string;
+  lastSyncAt?: string;
+  expired?: boolean;
+}
+
 export interface AnalysisResult {
   jobId: string;
   hook: string;
@@ -56,6 +90,7 @@ export interface AnalysisResult {
   viralScore: ViralScore | null;
   hasAudio: boolean;
   insights: string[];
+  viewPrediction: ViewPrediction | null;
 }
 
 export interface BurnSubtitlesResponse {
