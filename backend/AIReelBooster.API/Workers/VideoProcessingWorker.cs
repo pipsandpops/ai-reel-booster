@@ -61,32 +61,58 @@ public class VideoProcessingWorker : BackgroundService
             job.FrameRate = fps;
             _logger.LogInformation("Job {JobId}: Probed - {W}x{H} @ {FPS}fps, {Dur:F1}s", jobId, width, height, fps, duration);
 
-            // Step 2: Extract audio
-            SetStatus(job, JobStatus.Transcribing, 25, "Extracting audio...");
+            // Step 2: Check for audio stream
+            SetStatus(job, JobStatus.Transcribing, 20, "Checking audio...");
             var outputDir = storage.GetJobDirectory(jobId);
-            var audioPath = await videoProcessing.ExtractAudioAsync(job.OriginalFilePath!, outputDir, ct);
-            job.AudioFilePath = audioPath;
+            var hasAudio = await videoProcessing.HasAudioStreamAsync(job.OriginalFilePath!, ct);
+            job.HasAudio = hasAudio;
 
-            // Step 3: Extract thumbnail
-            try
+            List<SubtitleEntry> subtitles;
+            if (hasAudio)
             {
-                var thumbPath = await videoProcessing.ExtractThumbnailAsync(job.OriginalFilePath!, outputDir, ct);
-                job.ThumbnailFilePath = thumbPath;
+                // Step 2a: Extract audio
+                SetStatus(job, JobStatus.Transcribing, 25, "Extracting audio...");
+                var audioPath = await videoProcessing.ExtractAudioAsync(job.OriginalFilePath!, outputDir, ct);
+                job.AudioFilePath = audioPath;
+
+                // Step 3: Extract thumbnail
+                try
+                {
+                    var thumbPath = await videoProcessing.ExtractThumbnailAsync(job.OriginalFilePath!, outputDir, ct);
+                    job.ThumbnailFilePath = thumbPath;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Job {JobId}: Thumbnail extraction failed (non-fatal)", jobId);
+                }
+
+                // Step 4: Transcribe audio
+                SetStatus(job, JobStatus.Transcribing, 40, "Transcribing...");
+                subtitles = await transcription.TranscribeAsync(audioPath, ct);
+                _logger.LogInformation("Job {JobId}: Transcribed {Count} segments", jobId, subtitles.Count);
+
+                // Step 5: Write SRT file
+                var srtPath = storage.GetFilePath(jobId, "subtitles.srt");
+                await SrtWriter.WriteAsync(srtPath, subtitles, ct);
+                job.SrtFilePath = srtPath;
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogWarning(ex, "Job {JobId}: Thumbnail extraction failed (non-fatal)", jobId);
+                _logger.LogWarning("Job {JobId}: No audio stream detected — skipping transcription", jobId);
+                job.Insights.Add("Your reel has no audio — adding voiceover or background music can significantly boost engagement.");
+                subtitles = [];
+
+                // Still extract thumbnail
+                try
+                {
+                    var thumbPath = await videoProcessing.ExtractThumbnailAsync(job.OriginalFilePath!, outputDir, ct);
+                    job.ThumbnailFilePath = thumbPath;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Job {JobId}: Thumbnail extraction failed (non-fatal)", jobId);
+                }
             }
-
-            // Step 4: Transcribe audio
-            SetStatus(job, JobStatus.Transcribing, 40, "Transcribing...");
-            var subtitles = await transcription.TranscribeAsync(audioPath, ct);
-            _logger.LogInformation("Job {JobId}: Transcribed {Count} segments", jobId, subtitles.Count);
-
-            // Step 5: Write SRT file
-            var srtPath = storage.GetFilePath(jobId, "subtitles.srt");
-            await SrtWriter.WriteAsync(srtPath, subtitles, ct);
-            job.SrtFilePath = srtPath;
 
             // Step 6: Generate AI content
             SetStatus(job, JobStatus.GeneratingAI, 70, "Generating AI content...");
@@ -117,7 +143,9 @@ public class VideoProcessingWorker : BackgroundService
                 Caption = caption,
                 Hashtags = hashtags,
                 Subtitles = subtitles,
-                ViralScore = viralScore
+                ViralScore = viralScore,
+                HasAudio = job.HasAudio,
+                Insights = job.Insights,
             };
 
             SetStatus(job, JobStatus.Complete, 100, null);

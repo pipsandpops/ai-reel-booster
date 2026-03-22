@@ -5,7 +5,7 @@ import { HashtagCard } from './HashtagCard';
 import { SubtitlePanel } from './SubtitlePanel';
 import { VideoPreview } from './VideoPreview';
 import { ViralScoreCard } from './ViralScoreCard';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, VolumeX } from 'lucide-react';
 
 interface ResultsPanelProps {
   result: AnalysisResult;
@@ -40,6 +40,30 @@ export function ResultsPanel({ result, jobId, isPaidUser = false, onUpgrade }: R
           </p>
         </div>
       </div>
+
+      {/* No-audio insight banner */}
+      {!result.hasAudio && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 14,
+          background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 16,
+          padding: '14px 20px', marginBottom: 24,
+        }}>
+          <div style={{
+            width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+            background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <VolumeX size={18} color="#d97706" />
+          </div>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 700, color: '#92400e', margin: '0 0 2px' }}>
+              No audio detected
+            </p>
+            <p style={{ fontSize: 13, color: '#b45309', margin: 0 }}>
+              Adding voiceover or background music can significantly boost engagement.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Two-column layout */}
       <div className="r-results-grid">

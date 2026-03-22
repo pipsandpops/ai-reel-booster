@@ -7,6 +7,8 @@ public class AnalysisResult
     public List<string> Hashtags { get; set; } = [];
     public List<SubtitleEntry> Subtitles { get; set; } = [];
     public ViralScoreResult? ViralScore { get; set; }
+    public bool HasAudio { get; set; } = true;
+    public List<string> Insights { get; set; } = [];
 }
 
 public class ViralScoreResult

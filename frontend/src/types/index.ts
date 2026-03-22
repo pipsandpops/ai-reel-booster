@@ -54,6 +54,8 @@ export interface AnalysisResult {
   subtitles: SubtitleEntry[];
   metadata: VideoMetadata | null;
   viralScore: ViralScore | null;
+  hasAudio: boolean;
+  insights: string[];
 }
 
 export interface BurnSubtitlesResponse {

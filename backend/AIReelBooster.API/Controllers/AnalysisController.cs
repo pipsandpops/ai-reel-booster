@@ -64,7 +64,9 @@ public class AnalysisController : ControllerBase
                 result.ViralScore.ViralScore,
                 result.ViralScore.Problem,
                 result.ViralScore.ImprovedHook
-            )
+            ),
+            result.HasAudio,
+            result.Insights
         ));
     }
 
