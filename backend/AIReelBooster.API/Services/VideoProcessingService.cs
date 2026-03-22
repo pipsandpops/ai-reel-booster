@@ -72,6 +72,29 @@ public class VideoProcessingService : IVideoProcessingService
         return (info.Duration.TotalSeconds, video.Width, video.Height, video.Framerate);
     }
 
+    public async Task<bool> HasAudioStreamAsync(string filePath, CancellationToken ct = default)
+    {
+        await EnsureFFmpegAsync(ct);
+        var ffprobeBin = OperatingSystem.IsWindows() ? "ffprobe.exe" : "ffprobe";
+        var ffprobeExe = Path.Combine(FFmpeg.ExecutablesPath ?? "./ffmpeg-bin", ffprobeBin);
+        var args = $"-v error -select_streams a:0 -show_entries stream=index -of csv=p=0 \"{filePath}\"";
+
+        using var process = new System.Diagnostics.Process();
+        process.StartInfo = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = ffprobeExe,
+            Arguments = args,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        process.Start();
+        var stdout = await process.StandardOutput.ReadToEndAsync(ct);
+        await process.WaitForExitAsync(ct);
+        return !string.IsNullOrWhiteSpace(stdout);
+    }
+
     public async Task<string> ExtractAudioAsync(string videoPath, string outputDir, CancellationToken ct = default)
     {
         await EnsureFFmpegAsync(ct);

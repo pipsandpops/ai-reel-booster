@@ -23,7 +23,9 @@ public record AnalysisResultResponse(
     List<string> Hashtags,
     List<SubtitleEntryDto> Subtitles,
     VideoMetadataDto? Metadata,
-    ViralScoreDto? ViralScore
+    ViralScoreDto? ViralScore,
+    bool HasAudio,
+    List<string> Insights
 );
 
 public record ViralScoreDto(
