@@ -25,7 +25,29 @@ public record AnalysisResultResponse(
     VideoMetadataDto? Metadata,
     ViralScoreDto? ViralScore,
     bool HasAudio,
-    List<string> Insights
+    List<string> Insights,
+    ViewPredictionDto? ViewPrediction
+);
+
+// ── View Prediction DTOs ──────────────────────────────────────────────────────
+
+public record ViewPredictionDto(
+    string PredictionType,          // "scenario" | "personalized"
+    string ViralTier,               // "Low" | "Medium" | "High"
+    List<ViewScenarioDto> Scenarios,
+    string Note,
+    // Personalised fields (null in scenario mode)
+    long?   Followers,
+    long?   AvgViews,
+    string? PredictedRange,
+    string? Confidence,
+    string? BasedOn
+);
+
+public record ViewScenarioDto(
+    string Followers,   // e.g. "10K"
+    string Views,       // e.g. "1.3K–5.2K"
+    string Tier         // "Low" | "Medium" | "High"
 );
 
 public record ViralScoreDto(

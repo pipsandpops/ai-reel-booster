@@ -14,6 +14,7 @@ public class AnalysisController : ControllerBase
     private readonly IVideoStorageService _storage;
     private readonly IVideoProcessingService _videoProcessing;
     private readonly IAIGenerationService _aiGeneration;
+    private readonly IScenarioPredictionService _scenarioPrediction;
     private readonly BackgroundProcessingQueue _queue;
     private readonly ILogger<AnalysisController> _logger;
 
@@ -22,15 +23,17 @@ public class AnalysisController : ControllerBase
         IVideoStorageService storage,
         IVideoProcessingService videoProcessing,
         IAIGenerationService aiGeneration,
+        IScenarioPredictionService scenarioPrediction,
         BackgroundProcessingQueue queue,
         ILogger<AnalysisController> logger)
     {
-        _jobStore = jobStore;
-        _storage = storage;
-        _videoProcessing = videoProcessing;
-        _aiGeneration = aiGeneration;
-        _queue = queue;
-        _logger = logger;
+        _jobStore           = jobStore;
+        _storage            = storage;
+        _videoProcessing    = videoProcessing;
+        _aiGeneration       = aiGeneration;
+        _scenarioPrediction = scenarioPrediction;
+        _queue              = queue;
+        _logger             = logger;
     }
 
     [HttpGet("{jobId}")]
@@ -43,6 +46,28 @@ public class AnalysisController : ControllerBase
             return Conflict(new { error = $"Job is not complete. Current status: {job.Status}" });
 
         var result = job.AnalysisResult!;
+
+        // Compute scenario-based view prediction from viral score factors
+        ViewPredictionDto? viewPrediction = null;
+        if (result.ViralScore != null)
+        {
+            var vp = _scenarioPrediction.GenerateScenarios(
+                result.ViralScore.ViralScore,
+                result.ViralScore.EngagementScore,
+                result.ViralScore.HookScore);
+
+            viewPrediction = new ViewPredictionDto(
+                vp.PredictionType,
+                vp.ViralTier,
+                vp.Scenarios.Select(s => new ViewScenarioDto(s.Followers, s.Views, s.Tier)).ToList(),
+                vp.Note,
+                vp.Followers,
+                vp.AvgViews,
+                vp.PredictedRange,
+                vp.Confidence,
+                vp.BasedOn);
+        }
+
         return Ok(new AnalysisResultResponse(
             job.JobId,
             result.Hook,
@@ -66,7 +91,8 @@ public class AnalysisController : ControllerBase
                 result.ViralScore.ImprovedHook
             ),
             result.HasAudio,
-            result.Insights
+            result.Insights,
+            viewPrediction
         ));
     }
 

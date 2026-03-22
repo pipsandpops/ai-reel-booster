@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './index.css';
 import { useVideoUpload } from './hooks/useVideoUpload';
 import { useUserStatus } from './hooks/useUserStatus';
@@ -25,6 +25,31 @@ function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { userId, status, refresh: refreshUserStatus } = useUserStatus();
   const isPaidUser = status.isPaid;
+
+  // ── Instagram OAuth callback ───────────────────────────────────────
+  const [igToast, setIgToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const igResult = params.get('ig_result');
+    if (!igResult) return;
+
+    // Clean the URL so refreshing doesn't re-trigger
+    window.history.replaceState({}, '', window.location.pathname);
+
+    if (igResult === 'success') {
+      const user = params.get('ig_user') ?? '';
+      setIgToast({ type: 'success', msg: `Instagram connected: @${user}` });
+    } else if (igResult === 'denied') {
+      setIgToast({ type: 'error', msg: 'Instagram connection was cancelled.' });
+    } else {
+      const msg = params.get('ig_msg') ?? 'Could not connect Instagram. Please try again.';
+      setIgToast({ type: 'error', msg });
+    }
+
+    const timer = setTimeout(() => setIgToast(null), 5000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const scrollTo = (id: string) => {
     setMobileMenuOpen(false);
@@ -74,6 +99,23 @@ function App() {
   // ── Main page ─────────────────────────────────────────────────────
   return (
     <div style={{ minHeight: '100vh', background: '#ffffff', display: 'flex', flexDirection: 'column' }}>
+
+      {/* ── Instagram OAuth toast ── */}
+      {igToast && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 2000, padding: '12px 20px', borderRadius: 12,
+          background: igToast.type === 'success' ? '#064e3b' : '#7f1d1d',
+          border: `1px solid ${igToast.type === 'success' ? '#10b981' : '#ef4444'}`,
+          color: 'white', fontSize: 14, fontWeight: 600,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+          display: 'flex', alignItems: 'center', gap: 8,
+          animation: 'toastIn 0.3s ease',
+          whiteSpace: 'nowrap',
+        }}>
+          {igToast.type === 'success' ? '✅' : '⚠️'} {igToast.msg}
+        </div>
+      )}
 
       {/* ── Nav ── */}
       <nav style={{
@@ -288,11 +330,12 @@ function App() {
           <section style={{ padding: '32px 24px 64px' }}>
             <div style={{ maxWidth: 1100, margin: '0 auto' }}>
               <ResultsPanel
-              result={result}
-              jobId={jobId}
-              isPaidUser={isPaidUser}
-              onUpgrade={() => { setPage('payment'); setSelectedPlan(null); setTimeout(() => scrollTo('pricing'), 100); }}
-            />
+                result={result}
+                jobId={jobId}
+                userId={userId}
+                isPaidUser={isPaidUser}
+                onUpgrade={() => { setPage('payment'); setSelectedPlan(null); setTimeout(() => scrollTo('pricing'), 100); }}
+              />
             </div>
           </section>
         )}
