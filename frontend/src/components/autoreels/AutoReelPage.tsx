@@ -393,6 +393,37 @@ export function AutoReelPage({ userId, onBack, onUpgrade }: Props) {
               </div>
             </div>
 
+            {/* Plan tier banner */}
+            <div style={{
+              maxWidth: 640, margin: '0 auto 24px',
+              display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10,
+            }}>
+              <div style={{
+                background: 'white', border: '1.5px solid #e2e8f0',
+                borderRadius: 14, padding: '14px 16px',
+                display: 'flex', alignItems: 'center', gap: 12,
+              }}>
+                <span style={{ fontSize: 22 }}>🆓</span>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', margin: '0 0 2px' }}>Free</p>
+                  <p style={{ fontSize: 12, color: '#64748b', margin: 0 }}>1 reel unlocked · watermark</p>
+                </div>
+              </div>
+              <div style={{
+                background: 'linear-gradient(135deg, #eef2ff, #f5f3ff)',
+                border: '1.5px solid #c7d2fe',
+                borderRadius: 14, padding: '14px 16px',
+                display: 'flex', alignItems: 'center', gap: 12,
+                cursor: 'pointer',
+              }} onClick={onUpgrade}>
+                <span style={{ fontSize: 22 }}>⚡</span>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#4f46e5', margin: '0 0 2px' }}>Pro / Creator</p>
+                  <p style={{ fontSize: 12, color: '#6366f1', margin: 0 }}>All 5 reels · HD · no watermark</p>
+                </div>
+              </div>
+            </div>
+
             <div style={{ maxWidth: 640, margin: '0 auto' }}>
               <ReelUploader onUpload={file => start(file, userId)} />
             </div>
